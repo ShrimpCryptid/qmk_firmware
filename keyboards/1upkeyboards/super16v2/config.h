@@ -18,6 +18,10 @@
 
 #define MOUSEKEY_MOVE_DELTA 25
 
+
+#define ENABLE_RGB_MATRIX_SOLID_REACTIVE_SIMPLE
+#define RGB_MATRIX_TIMEOUT 60000
+
 /*
  * Feature disable options
  *  These options are also useful to firmware size reduction.

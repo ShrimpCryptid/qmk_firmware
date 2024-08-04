@@ -72,9 +72,51 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     KC_NUM,    RGB_HUI,    RGB_SAI,    RGB_VAI,
     KC_TRNS,   RGB_HUD,    RGB_SAD,    RGB_VAD,
     KC_TRNS,   RGB_SPI,    KC_TRNS,    KC_TRNS,
-    KC_TRNS,   KC_TRNS,    KC_TRNS,    QK_BOOT
+    KC_TRNS,   KC_TRNS,    KC_TRNS,    KC_TRNS
   ),
 };
+
+void keyboard_post_init_user(void) {
+    rgb_matrix_enable_noeeprom();
+    rgb_matrix_mode_noeeprom(RGB_MATRIX_SOLID_REACTIVE_SIMPLE);
+    // rgb_matrix_set_color_all(RGB_OFF);
+}
+
+bool rgb_matrix_indicators_kb(void) {
+    if (!rgb_matrix_indicators_user()) {
+        return false;
+    }
+
+    // Index for indicator keys are:
+    // 7
+    // 11
+    // 15
+
+    uint8_t layer_colors [3][3] = {
+      {0x00, 0x00, 0xFF},
+      {0x00, 0xFF, 0xFF},
+      {0xFF, 0x88, 0x00}
+    };
+    // Ordered by corresponding layer (0, 1, 2)
+    uint8_t indicator_keys [3] = {15, 11, 7};
+
+    const int layer = get_highest_layer(layer_state);
+
+    for (uint8_t i = 0; i < 3; i++) {
+        float strength = 0.5;
+        if (layer != i) {
+          strength = 0.1;
+        }
+
+        rgb_matrix_set_color(indicator_keys[i],
+            (int) (layer_colors[layer][0] * strength),
+            (int) (layer_colors[layer][1] * strength),
+            (int) (layer_colors[layer][2] * strength)
+        );
+    }
+    
+    return true;
+}
 
 bool process_record_user(uint16_t keycode, keyrecord_t *record) {
   switch (keycode) {
@@ -155,27 +197,6 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
   }
   return true;
 };
-
-layer_state_t layer_state_set_user(layer_state_t state) {
-    switch (get_highest_layer(state)) {
-    case 0:
-        rgb_matrix_set_color(0,0x00,  0x00, 0xFF);
-        break;
-    case 1:
-        rgb_matrix_set_color(0,0xFF,  0x00, 0x00);
-        break;
-    case 2:
-        rgb_matrix_set_color(0,0x00,  0xFF, 0x00);
-        break;
-    case 3:
-        rgb_matrix_set_color(0,0x7A,  0x00, 0xFF);
-        break;
-    default: //  for any other layers, or the default layer
-        rgb_matrix_set_color(0, 0x00,  0xFF, 0xFF);
-        break;
-    }
-  return state;
-}
 
 bool encoder_update_user(uint8_t index, bool clockwise) {
     if (index == 0) { /* First encoder */
