@@ -36,17 +36,19 @@
 
 enum custom_keycodes {
     // Inkscape macros
-    MI_LAYER_UP = SAFE_RANGE,
-    MI_LAYER_DOWN,
-    MI_LAYER_VIS,
-    MI_LAYER_LOCK,
-    MI_CLONE,
-    MI_UNCLONE,
-    MI_DYN_OUTSET,
-    MI_SIMPLIFY,
-    MI_STITCH_PREV,
-    MI_STITCH_SIM,
-    MI_SAVE_PES
+    MI_LAYER_UP = SAFE_RANGE, // ctrl + pgup
+    MI_LAYER_DOWN,  // ctrl + pgdn
+    MI_LAYER_VIS,   // ctrl + alt + pgup
+    MI_LAYER_LOCK,  // ctrl + alt + pgdn
+    MI_RESET_ZOOM,  // 
+    MI_CLONE,       // alt + d
+    MI_UNCLONE,     // shift + alt + d
+    MI_DYN_OUTSET,  // ctrl + j
+    MI_SIMPLIFY,    // ctrl + shift + j
+    MI_STITCH_PROP, // ctrl + shift + p
+    MI_STITCH_PREV, // ctrl + shift + l
+    MI_STITCH_SIM,  // ctrl + alt + shift + l
+    MI_SAVE_PES     // ctrl + alt + shift + s > tab > right x18 > enter
 
     // Krita macros
 };
@@ -60,9 +62,9 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
   ),
 
   [1] = LAYOUT_ortho_4x4( /* Inkscape */
-    KC_NUM,    MI_LAYER_UP,    MI_LAYER_VIS,   MI_LAYER_DOWN,
+    KC_P1,     MI_LAYER_UP,    MI_LAYER_VIS,   MI_LAYER_DOWN,
     KC_TRNS,   MI_CLONE,       MI_LAYER_LOCK,  MI_UNCLONE,
-    KC_TRNS,   MI_DYN_OUTSET,  MI_SIMPLIFY,    KC_TRNS,
+    KC_TRNS,   MI_DYN_OUTSET,  MI_SIMPLIFY,    MI_STITCH_PROP,
     KC_TRNS,   MI_STITCH_PREV, MI_STITCH_SIM,  MI_SAVE_PES
   ),
 
@@ -76,24 +78,104 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 
 bool process_record_user(uint16_t keycode, keyrecord_t *record) {
   switch (keycode) {
-  // Inkscape layer up/down
-  case MI_LAYER_UP:
-    if (record->event.pressed) {
-      // Use X for macro key identifiers
-      SEND_STRING(SS_LCTL(SS_TAP(X_PGUP)));
-    }
-    break;
-  case MI_LAYER_DOWN:
-    if (record->event.pressed) {
-      // Use X for macro key identifiers
-      SEND_STRING(SS_LCTL(SS_TAP(X_PGDN)));
-    }
-    break;
-  // Inkscape layer controls
 
+    // Inkscape layer controls
+    case MI_LAYER_UP:
+      if (record->event.pressed) {
+        // Use X for macro key identifiers
+        SEND_STRING(SS_LCTL(SS_TAP(X_PGUP)));
+      }
+      break;
+    case MI_LAYER_DOWN:
+      if (record->event.pressed) {
+        SEND_STRING(SS_LCTL(SS_TAP(X_PGDN)));
+      }
+      break;
+    case MI_LAYER_VIS:
+      if (record->event.pressed) {
+        SEND_STRING(SS_LCTL(SS_LALT(SS_TAP(X_PGUP))));
+      }
+      break;
+    case MI_LAYER_LOCK:
+      if (record->event.pressed) {
+        SEND_STRING(SS_LCTL(SS_LALT(SS_TAP(X_PGDN))));
+      }
+      break;
+    
+    // Clone + unclone
+    case MI_CLONE:
+      if (record->event.pressed) {
+        SEND_STRING(SS_LALT("d"));
+      }
+      break;
+    case MI_UNCLONE:
+      if (record->event.pressed) {
+        SEND_STRING(SS_LALT(SS_LSFT("d")));
+      }
+      break;
+
+    // Add'l commands
+    case MI_DYN_OUTSET:
+      if (record->event.pressed) {
+        SEND_STRING(SS_LCTL("j"));
+      }
+      break;
+    case MI_SIMPLIFY:
+      if (record->event.pressed) {
+        SEND_STRING(SS_LCTL(SS_LSFT("j")));
+      }
+      break;
+
+    //Inkstitch commands
+    case MI_STITCH_PREV:
+      if (record->event.pressed) {
+        SEND_STRING(SS_LCTL(SS_LSFT("l")));
+      }
+      break;
+    case MI_STITCH_SIM:
+      if (record->event.pressed) {
+        SEND_STRING(SS_LCTL(SS_LSFT(SS_LALT("l"))));
+      }
+      break;
+    case MI_STITCH_PROP:
+      if (record->event.pressed) {
+        SEND_STRING(SS_LCTL(SS_LSFT("p")));;
+      }
+      break;
+    case MI_SAVE_PES:
+      if (record->event.pressed) {
+        SEND_STRING(SS_LCTL(SS_LSFT(SS_LALT("s"))));
+        SEND_STRING(SS_DELAY(500) SS_TAP(X_TAB));
+        for (int i = 0; i < 19; i++) {
+          SEND_STRING(SS_DELAY(10) SS_TAP(X_RIGHT));
+        }
+        SEND_STRING(SS_TAP(X_ENTER));
+      }
+      break;
   }
   return true;
 };
+
+layer_state_t layer_state_set_user(layer_state_t state) {
+    switch (get_highest_layer(state)) {
+    case 0:
+        rgb_matrix_set_color(0,0x00,  0x00, 0xFF);
+        break;
+    case 1:
+        rgb_matrix_set_color(0,0xFF,  0x00, 0x00);
+        break;
+    case 2:
+        rgb_matrix_set_color(0,0x00,  0xFF, 0x00);
+        break;
+    case 3:
+        rgb_matrix_set_color(0,0x7A,  0x00, 0xFF);
+        break;
+    default: //  for any other layers, or the default layer
+        rgb_matrix_set_color(0, 0x00,  0xFF, 0xFF);
+        break;
+    }
+  return state;
+}
 
 bool encoder_update_user(uint8_t index, bool clockwise) {
     if (index == 0) { /* First encoder */
