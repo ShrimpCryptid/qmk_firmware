@@ -93,9 +93,9 @@ bool rgb_matrix_indicators_kb(void) {
     // 15
 
     uint8_t layer_colors [3][3] = {
-      {0x00, 0x00, 0xFF},
-      {0x00, 0xFF, 0xFF},
-      {0xFF, 0x88, 0x00}
+      {0x11, 0xA0, 0x10}, // dark green
+      {0x09, 0xC0, 0x00}, // light green
+      {0xFF, 0x33, 0x03}  // orange
     };
     // Ordered by corresponding layer (0, 1, 2)
     uint8_t indicator_keys [3] = {15, 11, 7};
@@ -103,7 +103,7 @@ bool rgb_matrix_indicators_kb(void) {
     const int layer = get_highest_layer(layer_state);
 
     for (uint8_t i = 0; i < 3; i++) {
-        float strength = 0.5;
+        float strength = 0.4;
         if (layer != i) {
           strength = 0.1;
         }
